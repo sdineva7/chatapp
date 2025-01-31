@@ -1,0 +1,18 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding-top: 50px; /* Adjust for fixed navbar height */
+    padding-bottom: 40px; /* Adjust for fixed footer height */
+  }
+  
+  .content {
+    display: flex;
+    flex: 1;
+  }
+  
+  main {
+    flex: 1;
+    padding: 20px;
+    margin-left: 230px; /* Adjust for sidebar width */
+  }
