@@ -4,10 +4,18 @@ import "./Navbar.css";
 import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <nav className="navbar">
       <ul>
+        <li>
+          <h2>ChatApp</h2>
+        </li>
         <li>
           <Link to="/">Home</Link>
         </li>
@@ -27,7 +35,10 @@ const Navbar = () => {
               <Link to="/channels/create">Create Channel</Link>
             </li>
             <li>
-              <Link to="/channels/create">Add Friend</Link>
+              <Link to="/users">Add Friend</Link>
+            </li>
+            <li>
+              <button onClick={handleLogout} className="logout-button">Logout</button>
             </li>
           </>
         )}

@@ -1,12 +1,13 @@
 package com.fmi.chatappservice.services;
 
-
 import com.fmi.chatappservice.dto.ChannelDTO;
 import com.fmi.chatappservice.data.*;
 import com.fmi.chatappservice.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class FriendshipService {
@@ -17,7 +18,9 @@ public class FriendshipService {
     private final RoleRepository roleRepository;
 
     @Autowired
-    public FriendshipService(FriendshipRepository friendshipRepository, UserRepository userRepository, ChannelRepository channelRepository, ChannelMemberRepository channelMemberRepository, RoleRepository roleRepository) {
+    public FriendshipService(FriendshipRepository friendshipRepository, UserRepository userRepository,
+                             ChannelRepository channelRepository, ChannelMemberRepository channelMemberRepository,
+                             RoleRepository roleRepository) {
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.channelRepository = channelRepository;
@@ -27,67 +30,78 @@ public class FriendshipService {
 
     @Transactional
     public ChannelDTO addFriend(Long currentUserId, Long friendId) {
-        var existingRelation = friendshipRepository.findExistingFriendship(currentUserId, friendId);
+        User currentUser = userRepository.getUserById(currentUserId);
+        User friend = userRepository.getUserById(friendId);
+        Optional<Friendship> existingFriendshipOpt = friendshipRepository.findExistingFriendship(currentUser.getEmail(), friend.getEmail());
 
-        if (existingRelation.isPresent()) {
-            Friendship existingFriendship = existingRelation.get();
-            var sharedChannel = existingFriendship.getChannel();
-            var hasFriendInitiatedFriendship = existingFriendship.getCurrentUser().getId().equals(friendId);
-            var hasCurrentUserInitiatedFriendShip = friendshipRepository.findExistingFriendship(friendId, currentUserId).isPresent();
+        return existingFriendshipOpt.map(friendship -> handleExistingFriendship(friendship, currentUser.getEmail(), friend.getEmail())).orElseGet(() -> createNewFriendship(currentUser.getEmail(), friend.getEmail(    )));
 
-            if (hasFriendInitiatedFriendship && !hasCurrentUserInitiatedFriendShip) {
-                var currentUser = userRepository.findById(currentUserId).orElseThrow();
-                var friend = userRepository.findById(friendId).orElseThrow();
+    }
 
-                ensureMembership(sharedChannel, currentUser);
-                ensureMembership(sharedChannel, friend);
+    private ChannelDTO handleExistingFriendship(Friendship existingFriendship, String currentUserEmail, String friendEmail) {
+        Channel sharedChannel = existingFriendship.getChannel();
+        boolean isFriendInitiator = existingFriendship.getCurrentUser().getEmail().equals(friendEmail);
+        boolean isCurrentUserAlreadyFriend = friendshipRepository.findExistingFriendship(currentUserEmail, friendEmail).isPresent();
 
-                // To ensure availability in user.friendshipsInitiated
-                var newFriendship = new Friendship();
-                newFriendship.setCurrentUser(currentUser);
-                newFriendship.setFriend(friend);
-                newFriendship.setChannel(sharedChannel);
-                friendshipRepository.save(newFriendship);
-            }
+        if (isFriendInitiator && !isCurrentUserAlreadyFriend) {
+            User currentUser = getUserById(existingFriendship.getCurrentUser().getId());
+            User friend = getUserById(existingFriendship.getFriend().getId());
 
-            return mapToChannelDTO(existingFriendship.getChannel());
+            ensureMembership(sharedChannel, currentUser);
+            ensureMembership(sharedChannel, friend);
 
-        } else {
-            // No friendship at all
-            User currentUser = userRepository.findById(currentUserId).orElseThrow();
-            User friend = userRepository.findById(friendId).orElseThrow();
-
-            Channel channel = new Channel();
-            channel.setIsDeleted(false);
-            String channelName = currentUserId < friendId
-                    ? (currentUserId + "-" + friendId)
-                    : (friendId + "-" + currentUserId);
-            channel.setName(channelName);
-            channelRepository.save(channel);
-
-            Friendship friendship = new Friendship();
-            friendship.setCurrentUser(currentUser);
-            friendship.setFriend(friend);
-            friendship.setChannel(channel);
-            friendshipRepository.save(friendship);
-
-            Role guestRole = roleRepository.findByRoleName("GUEST").orElseThrow();
-            addMembership(channel, currentUser, guestRole);
-            addMembership(channel, friend, guestRole);
-
-            return mapToChannelDTO(channel);
+            saveFriendship(currentUser, friend, sharedChannel);
         }
+
+        return mapToChannelDTO(sharedChannel, null);
+    }
+
+    private ChannelDTO createNewFriendship(String currentUserEmail, String friendEmail) {
+        User currentUser = userRepository.getUserByEmail((currentUserEmail));
+        User friend = userRepository.getUserByEmail(friendEmail);
+
+        Channel channel = createChannel(currentUser.getEmail(), friend.getEmail());
+        saveFriendship(currentUser, friend, channel);
+
+        Role guestRole = getGuestRole();
+        addMembership(channel, currentUser, guestRole);
+        addMembership(channel, friend, guestRole);
+
+        return mapToChannelDTO(channel, guestRole.getId());
+    }
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    }
+
+    private Channel createChannel(String user1, String user2) {
+        Channel channel = new Channel();
+        channel.setIsDeleted(false);
+        channel.setName(generateChannelName(user1, user2));
+        return channelRepository.save(channel);
+    }
+
+    private String generateChannelName(String  user1, String user2) {
+        return user1 + "-" + user2;
+    }
+
+    private void saveFriendship(User user, User friend, Channel channel) {
+        Friendship friendship = new Friendship();
+        friendship.setCurrentUser(user);
+        friendship.setFriend(friend);
+        friendship.setChannel(channel);
+        friendshipRepository.save(friendship);
     }
 
     private void ensureMembership(Channel channel, User user) {
-        boolean alreadyMember = channelMemberRepository
-                .findAll()
+        boolean isAlreadyMember = channelMemberRepository.findAll()
                 .stream()
-                .anyMatch(m -> m.getChannel().getId().equals(channel.getId())
-                        && m.getUser().getId().equals(user.getId()));
-        if (!alreadyMember) {
-            Role guestRole = roleRepository.findByRoleName("GUEST").orElseThrow();
-            addMembership(channel, user, guestRole);
+                .anyMatch(m -> m.getChannel().getId().equals(channel.getId()) &&
+                        m.getUser().getId().equals(user.getId()));
+
+        if (!isAlreadyMember) {
+            addMembership(channel, user, getGuestRole());
         }
     }
 
@@ -99,11 +113,12 @@ public class FriendshipService {
         channelMemberRepository.save(channelMember);
     }
 
-    public ChannelDTO mapToChannelDTO(Channel channel) {
-        ChannelDTO dto = new ChannelDTO();
-        dto.setId(channel.getId());
-        dto.setName(channel.getName());
-        dto.setIsDeleted(channel.getIsDeleted());
-        return dto;
+    private Role getGuestRole() {
+        return roleRepository.findByName("GUEST")
+                .orElseThrow(() -> new IllegalArgumentException("Guest role not found"));
+    }
+
+    private ChannelDTO mapToChannelDTO(Channel channel, Long roleId) {
+        return new ChannelDTO(channel.getId(), channel.getName(), channel.getIsDeleted(), roleId);
     }
 }

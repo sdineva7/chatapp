@@ -13,7 +13,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     @Query("""
             SELECT f
             FROM Friendship f
-            WHERE (f.currentUser.id = :userId2 AND f.friend.id = :userId1)
+            WHERE (f.currentUser.email = :user1 AND f.friend.email = :user2)
             """)
-    Optional<Friendship> findExistingFriendship(Long userId1, Long userId2);
+    Optional<Friendship> findExistingFriendship(String user1, String user2);
 }

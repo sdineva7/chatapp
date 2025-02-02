@@ -2,78 +2,141 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 20px;
 }
 
 .chat-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  align-items: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
 }
 
 .channel-info {
   display: flex;
-  align-items: start;
-  flex-direction: column;
+  align-items: center;
 }
 
 .channel-name {
-  font-size: 14pt;
+  font-size: 1.5em;
   font-weight: bold;
+}
+
+.invite-form {
+  display: flex;
+  align-items: center;
+}
+
+.invite-form input {
+  padding: 5px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.invite-form button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.invite-form button:hover {
+  background-color: #0056b3;
+}
+
+.delete-button, .members-button {
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.delete-button:hover, .members-button:hover {
+  background-color: #c82333;
 }
 
 .messages {
   flex: 1;
+  padding: 10px;
   overflow-y: auto;
-  margin-bottom: 20px;
 }
 
 .message {
   margin-bottom: 10px;
 }
 
-.message-form,
-.invite-form {
+.message-form {
   display: flex;
-  margin-bottom: 10px;
+  padding: 10px;
+  border-top: 1px solid #ddd;
 }
 
-.message-form input,
-.invite-form input {
+.message-form input {
   flex: 1;
   padding: 10px;
-  margin-right: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 4px;
+  margin-right: 10px;
 }
 
-.message-form button,
-.invite-form button,
-.delete-button {
+.message-form button {
   padding: 10px 20px;
-  border: none;
   background-color: #007bff;
   color: white;
-  border-radius: 5px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.message-form button:hover,
-.invite-form button:hover,
-.delete-button:hover {
+.message-form button:hover {
   background-color: #0056b3;
 }
 
-.delete-button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #b3001b;
+.members-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.members-popup h3 {
+  margin-bottom: 20px;
+}
+
+.members-popup ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.members-popup li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.members-popup button {
+  padding: 5px 10px;
+  background-color: #007bff;
   color: white;
-  border-radius: 5px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.delete-button:hover {
-  background-color: #ff1a4d;
+.members-popup button:hover {
+  background-color: #0056b3;
 }

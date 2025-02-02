@@ -46,7 +46,7 @@ public class ChannelService {
         channel.setIsDeleted(false);
         channel = channelRepository.save(channel);
 
-        Role ownerRole = roleRepository.findByRoleName("OWNER").orElse(null);
+        Role ownerRole = roleRepository.findByName("OWNER").orElse(null);
         if (ownerRole == null) {
             return null;
         }
@@ -66,7 +66,7 @@ public class ChannelService {
             return;
         }
 
-        Role ownerRole = roleRepository.findByRoleName("OWNER").orElse(null);
+        Role ownerRole = roleRepository.findByName("OWNER").orElse(null);
         if (ownerRole == null) {
             return;
         }
@@ -104,7 +104,7 @@ public class ChannelService {
             return;
         }
 
-        Role ownerRole = roleRepository.findByRoleName("OWNER").orElse(null);
+        Role ownerRole = roleRepository.findByName("OWNER").orElse(null);
         if (ownerRole == null) {
             return;
         }
@@ -125,8 +125,8 @@ public class ChannelService {
             return;
         }
 
-        Role ownerRole = roleRepository.findByRoleName("OWNER").orElse(null);
-        Role adminRole = roleRepository.findByRoleName("ADMIN").orElse(null);
+        Role ownerRole = roleRepository.findByName("OWNER").orElse(null);
+        Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
         if (ownerRole == null || adminRole == null) {
             return;
         }
@@ -149,7 +149,7 @@ public class ChannelService {
             return;
         }
 
-        Role guestRole = roleRepository.findByRoleName("GUEST").orElse(null);
+        Role guestRole = roleRepository.findByName("GUEST").orElse(null);
         if (guestRole == null) {
             return;
         }
@@ -167,7 +167,7 @@ public class ChannelService {
             return;
         }
 
-        Role ownerRole = roleRepository.findByRoleName("OWNER").orElse(null);
+        Role ownerRole = roleRepository.findByName("OWNER").orElse(null);
         if (ownerRole == null) {
             return;
         }
@@ -178,7 +178,7 @@ public class ChannelService {
             return;
         }
 
-        Role guestRole = roleRepository.findByRoleName("GUEST").orElse(null);
+        Role guestRole = roleRepository.findByName("GUEST").orElse(null);
         if (guestRole == null) {
             return;
         }
@@ -199,7 +199,7 @@ public class ChannelService {
             return;
         }
 
-        Role ownerRole = roleRepository.findByRoleName("OWNER").orElse(null);
+        Role ownerRole = roleRepository.findByName("OWNER").orElse(null);
         if (ownerRole == null) {
             return;
         }
@@ -210,7 +210,7 @@ public class ChannelService {
             return;
         }
 
-        Role guestRole = roleRepository.findByRoleName("GUEST").orElse(null);
+        Role guestRole = roleRepository.findByName("GUEST").orElse(null);
         if (guestRole == null) {
             return;
         }
@@ -227,7 +227,7 @@ public class ChannelService {
             return;
         }
 
-        Role adminRole = roleRepository.findByRoleName("ADMIN").orElse(null);
+        Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
         if (adminRole == null) {
             return;
         }

@@ -6,6 +6,7 @@ import { getChannelMessages } from "../services/channels/getChannelMessages";
 import { deleteChannel } from "../services/channels/deleteChannel";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
+import axios from 'axios';
 
 const Chat = ({ channelId }) => {
   const { user, userChannels } = useAuth();
@@ -17,7 +18,9 @@ const Chat = ({ channelId }) => {
   ]);
   const [channelDetails, setChannelDetails] = useState({});
   const [inviteEmail, setInviteEmail] = useState("");
-  
+  const [showMembersPopup, setShowMembersPopup] = useState(false);
+  const [members, setMembers] = useState([]);
+
   const navigate = useNavigate();
 
   const handleSendMessage = async (e) => {
@@ -32,11 +35,21 @@ const Chat = ({ channelId }) => {
     }
   };
 
-  const handleInviteUser = (e) => {
+  const handleInviteUser = async (e) => {
     e.preventDefault();
     if (inviteEmail.trim()) {
-      // Logic to invite user
-      alert(`Invite sent to ${inviteEmail}`);
+      try {
+        const response = await axios.get(`http://localhost:8080/api/users?search=${inviteEmail}`);
+        if (response.data.data.length > 0) {
+          const guestId = response.data.data[0].id;
+          await axios.post(`http://localhost:8080/api/channels/${channelId}/add-guest?userId=${user.id}&guestId=${guestId}`);
+          alert('Guest added to channel successfully!');
+        } else {
+          alert('User not found');
+        }
+      } catch (error) {
+        console.error('Error inviting user:', error);
+      }
       setInviteEmail("");
     }
   };
@@ -48,6 +61,28 @@ const Chat = ({ channelId }) => {
       navigate("/dashboard");
     } else {
       toast.error("You don't have permission to delete this channel");
+    }
+  };
+
+  const handleToggleMembersPopup = async () => {
+    setShowMembersPopup(!showMembersPopup);
+    if (!showMembersPopup) {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/channels/${channelId}/members`);
+        setMembers(response.data);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+      }
+    }
+  };
+
+  const handleToggleAdminRole = async (memberId, isAdmin) => {
+    try {
+      await axios.post(`http://localhost:8080/api/channels/${channelId}/toggle-admin`, { userId: memberId, isAdmin });
+      alert('User role updated successfully!');
+      handleToggleMembersPopup(); // Refresh members list
+    } catch (error) {
+      console.error('Error updating user role:', error);
     }
   };
 
@@ -87,9 +122,14 @@ const Chat = ({ channelId }) => {
           <button type="submit">Invite</button>
         </form>
         {channelDetails?.roleId === 1 && (
-          <button className="delete-button" onClick={handleDeleteChannel}>
-            Delete Channel
-          </button>
+          <>
+            <button className="delete-button" onClick={handleDeleteChannel}>
+              Delete Channel
+            </button>
+            <button className="members-button" onClick={handleToggleMembersPopup}>
+              View Members
+            </button>
+          </>
         )}
       </div>
       <div className="messages">
@@ -109,6 +149,22 @@ const Chat = ({ channelId }) => {
         />
         <button type="submit">Send</button>
       </form>
+      {showMembersPopup && (
+        <div className="members-popup">
+          <h3>Channel Members</h3>
+          <ul>
+            {members.map((member) => (
+              <li key={member.id}>
+                {member.name} ({member.email})
+                <button onClick={() => handleToggleAdminRole(member.id, !member.isAdmin)}>
+                  {member.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button onClick={handleToggleMembersPopup}>Close</button>
+        </div>
+      )}
     </div>
   );
 };

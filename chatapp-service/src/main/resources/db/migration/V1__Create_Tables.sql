@@ -13,10 +13,10 @@ CREATE TABLE channels (
 
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    role_name VARCHAR(20) NOT NULL UNIQUE
+    name VARCHAR(20) NOT NULL UNIQUE
 );
 
-INSERT INTO roles (role_name) VALUES
+INSERT INTO roles (name) VALUES
     ('OWNER'),
     ('ADMIN'),
     ('GUEST');
